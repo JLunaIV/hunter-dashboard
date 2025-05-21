@@ -6,22 +6,23 @@ import { toast } from 'sonner';
 import { LockKeyhole } from 'lucide-react';
 
 export function LoginForm() {
-  const { signIn, signUp } = useAuth();
+  const { signIn, signUp, resetPassword } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [isRegistering, setIsRegistering] = useState(false);
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
 
   const validateForm = () => {
-    if (!email || !password) {
-      toast.error('Please fill in all fields');
+    if (!email) {
+      toast.error('Please enter your email address');
       return false;
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       toast.error('Please enter a valid email address');
       return false;
     }
-    if (password.length < 6) {
+    if (!isForgotPassword && (!password || password.length < 6)) {
       toast.error('Password must be at least 6 characters long');
       return false;
     }
@@ -35,7 +36,10 @@ export function LoginForm() {
     setLoading(true);
 
     try {
-      if (isRegistering) {
+      if (isForgotPassword) {
+        await resetPassword(email);
+        setIsForgotPassword(false);
+      } else if (isRegistering) {
         await signUp(email, password);
         toast.success('Registration successful! Please sign in.');
         setIsRegistering(false);
@@ -59,7 +63,9 @@ export function LoginForm() {
             Welcome to Hunter Master Ops
           </h1>
           <p className="text-sm text-muted-foreground">
-            {isRegistering
+            {isForgotPassword
+              ? 'Enter your email to reset your password'
+              : isRegistering
               ? 'Create an account to get started'
               : 'Enter your credentials to access the dashboard'}
           </p>
@@ -76,42 +82,75 @@ export function LoginForm() {
               className="bg-background"
             />
           </div>
-          <div className="space-y-2">
-            <Input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              disabled={loading}
-              className="bg-background"
-            />
-          </div>
+          {!isForgotPassword && (
+            <div className="space-y-2">
+              <Input
+                type="password"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                disabled={loading}
+                className="bg-background"
+              />
+            </div>
+          )}
           <Button
             type="submit"
             className="w-full"
             disabled={loading}
           >
             {loading
-              ? isRegistering
+              ? isForgotPassword
+                ? 'Sending reset email...'
+                : isRegistering
                 ? 'Creating account...'
                 : 'Signing in...'
+              : isForgotPassword
+              ? 'Send reset email'
               : isRegistering
               ? 'Create account'
               : 'Sign In'}
           </Button>
         </form>
-        <div className="text-center text-sm">
+        <div className="space-y-2 text-center text-sm">
           <button
             type="button"
             className="text-primary hover:underline"
-            onClick={() => setIsRegistering(!isRegistering)}
+            onClick={() => {
+              setIsForgotPassword(false);
+              setIsRegistering(!isRegistering);
+            }}
             disabled={loading}
           >
             {isRegistering
               ? 'Already have an account? Sign in'
               : "Don't have an account? Sign up"}
           </button>
+          {!isRegistering && !isForgotPassword && (
+            <div>
+              <button
+                type="button"
+                className="text-primary hover:underline"
+                onClick={() => setIsForgotPassword(true)}
+                disabled={loading}
+              >
+                Forgot your password?
+              </button>
+            </div>
+          )}
+          {isForgotPassword && (
+            <div>
+              <button
+                type="button"
+                className="text-primary hover:underline"
+                onClick={() => setIsForgotPassword(false)}
+                disabled={loading}
+              >
+                Back to sign in
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
