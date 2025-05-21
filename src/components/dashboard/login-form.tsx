@@ -12,8 +12,26 @@ export function LoginForm() {
   const [loading, setLoading] = useState(false);
   const [isRegistering, setIsRegistering] = useState(false);
 
+  const validateForm = () => {
+    if (!email || !password) {
+      toast.error('Please fill in all fields');
+      return false;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      toast.error('Please enter a valid email address');
+      return false;
+    }
+    if (password.length < 6) {
+      toast.error('Password must be at least 6 characters long');
+      return false;
+    }
+    return true;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!validateForm()) return;
+    
     setLoading(true);
 
     try {
@@ -26,7 +44,7 @@ export function LoginForm() {
         toast.success('Welcome back!');
       }
     } catch (error) {
-      toast.error(isRegistering ? 'Registration failed' : 'Invalid credentials');
+      // Error is handled in auth provider
     } finally {
       setLoading(false);
     }
@@ -54,6 +72,8 @@ export function LoginForm() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              disabled={loading}
+              className="bg-background"
             />
           </div>
           <div className="space-y-2">
@@ -63,6 +83,8 @@ export function LoginForm() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              disabled={loading}
+              className="bg-background"
             />
           </div>
           <Button
@@ -84,6 +106,7 @@ export function LoginForm() {
             type="button"
             className="text-primary hover:underline"
             onClick={() => setIsRegistering(!isRegistering)}
+            disabled={loading}
           >
             {isRegistering
               ? 'Already have an account? Sign in'
